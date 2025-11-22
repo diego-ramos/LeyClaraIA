@@ -1,12 +1,41 @@
 import os
+import pypdf
+import time
+import random
 from typing import List, Dict
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
+from langchain_google_genai import ChatGoogleGenerativeAI
+import google.generativeai as genai
+
+class CustomGoogleEmbeddings(Embeddings):
+    def __init__(self, api_key, model="models/text-embedding-004"):
+        genai.configure(api_key=api_key, transport='rest')
+        self.model = model
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings = []
+        for text in texts:
+            result = genai.embed_content(
+                model=self.model,
+                content=text,
+                task_type="retrieval_document"
+            )
+            embeddings.append(result['embedding'])
+        return embeddings
+
+    def embed_query(self, text: str) -> List[float]:
+        result = genai.embed_content(
+            model=self.model,
+            content=text,
+            task_type="retrieval_query"
+        )
+        return result['embedding']
 
 class RAGEngine:
     def __init__(self):
@@ -15,14 +44,16 @@ class RAGEngine:
         
         if not self.google_api_key:
             print("WARNING: GOOGLE_API_KEY not found. RAG will not work correctly.")
-
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=self.google_api_key)
+        
+        # Use custom embeddings class to force REST transport and bypass LangChain wrapper issues
+        self.embeddings = CustomGoogleEmbeddings(api_key=self.google_api_key, model="models/text-embedding-004")
+        
         self.vector_store = Chroma(
             persist_directory=self.persist_directory, 
             embedding_function=self.embeddings
         )
         
-        self.llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=self.google_api_key, temperature=0.3)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", google_api_key=self.google_api_key, temperature=0.3)
         
         # Custom Prompt for "Explain like I'm 5"
         self.prompt_template = """
@@ -42,22 +73,67 @@ class RAGEngine:
             template=self.prompt_template, input_variables=["context", "question"]
         )
 
+    def retry_with_backoff(self, func, *args, max_retries=8, **kwargs):
+        for i in range(max_retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if "504" in str(e) or "Deadline Exceeded" in str(e):
+                    wait_time = (2 ** i) + random.random()
+                    print(f"API Timeout (504). Retrying in {wait_time:.2f}s...")
+                    time.sleep(wait_time)
+                else:
+                    raise e
+        raise Exception("Max retries exceeded for API call")
+
     def ingest_documents(self, file_paths: List[str]):
         documents = []
         for path in file_paths:
             if path.endswith(".pdf"):
-                loader = PyPDFLoader(path)
-                documents.extend(loader.load())
+                try:
+                    print(f"Starting to read PDF: {path}")
+                    # Use pypdf directly with strict=False for better tolerance
+                    reader = pypdf.PdfReader(path, strict=False)
+                    text = ""
+                    total_pages = len(reader.pages)
+                    print(f"PDF has {total_pages} pages.")
+                    
+                    for i, page in enumerate(reader.pages):
+                        print(f"Extracting page {i+1}/{total_pages}...")
+                        page_text = page.extract_text() or ""
+                        text += page_text
+                    
+                    print(f"Finished extracting text from {path}. Length: {len(text)} chars.")
+                    documents.append(Document(page_content=text, metadata={"source": path}))
+                    print(f"Successfully loaded PDF: {path}")
+                except Exception as e:
+                    print(f"Error loading PDF {path}: {e}")
             elif path.endswith(".txt"):
                 loader = TextLoader(path)
                 documents.extend(loader.load())
         
+        if not documents:
+            print("No documents to index.")
+            return
+
+        print("Splitting documents...")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         texts = text_splitter.split_documents(documents)
         
-        self.vector_store.add_documents(texts)
+        print(f"Generated {len(texts)} chunks. Starting embedding in batches...")
+        
+        # Batch processing to avoid API timeouts
+        batch_size = 1
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            print(f"Processing batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size} ({len(batch)} chunks)...")
+            
+            # Retry embedding generation for each batch
+            self.retry_with_backoff(self.vector_store.add_documents, batch)
+            time.sleep(1.5) # Rate limiting
+            
         self.vector_store.persist()
-        print(f"Ingested {len(texts)} chunks.")
+        print(f"Ingested {len(texts)} chunks successfully.")
 
     def query(self, query_text: str) -> Dict:
         # Retrieve top k documents
@@ -72,7 +148,8 @@ class RAGEngine:
             chain_type_kwargs={"prompt": self.prompt}
         )
         
-        result = qa_chain({"query": query_text})
+        # Retry query execution
+        result = self.retry_with_backoff(qa_chain, {"query": query_text})
         
         answer = result["result"]
         source_docs = result["source_documents"]

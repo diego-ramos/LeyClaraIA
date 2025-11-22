@@ -30,6 +30,10 @@ class ChatResponse(BaseModel):
     confidence_score: str
     youtube_videos: List[dict]
 
+from starlette.concurrency import run_in_threadpool
+
+# ...
+
 @app.post("/upload")
 async def upload_documents(files: List[UploadFile] = File(...)):
     saved_files = []
@@ -38,13 +42,24 @@ async def upload_documents(files: List[UploadFile] = File(...)):
     
     for file in files:
         file_path = os.path.join(upload_dir, file.filename)
+        content = await file.read()
+        
+        # Debug: Print first 20 bytes
+        print(f"File: {file.filename}, Size: {len(content)} bytes, Header: {content[:20]}")
+
+        # Sanitize PDF: Strip leading whitespace if present
+        if file.filename.lower().endswith(".pdf"):
+            if content.startswith(b'\t') or content.startswith(b'\n') or content.startswith(b'\r') or content.startswith(b' '):
+                print("Sanitizing PDF: Removing leading whitespace...")
+                content = content.lstrip(b' \t\n\r')
+
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(content)
         saved_files.append(file_path)
     
-    # Index documents
+    # Index documents in a separate thread to avoid blocking the event loop
     try:
-        rag_engine.ingest_documents(saved_files)
+        await run_in_threadpool(rag_engine.ingest_documents, saved_files)
         return {"message": f"Successfully processed {len(saved_files)} documents."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -52,13 +67,13 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
-        # 1. Get RAG response
-        rag_response = rag_engine.query(request.message)
+        # 1. Get RAG response (Run in threadpool)
+        rag_response = await run_in_threadpool(rag_engine.query, request.message)
         
         # 2. Get YouTube suggestions (Bonus)
         # Extract keywords from the answer or query for better results
         search_query = f"{request.message} legal explanation"
-        videos = search_youtube_videos(search_query)
+        videos = await run_in_threadpool(search_youtube_videos, search_query)
         
         return ChatResponse(
             answer=rag_response["answer"],
