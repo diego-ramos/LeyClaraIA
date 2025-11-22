@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: teloexplico-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data/chroma:/chroma_db
+    environment:
+      - CHROMA_DB_DIR=/chroma_db
+      - GOOGLE_API_KEY=AIzaSyAc5lNeClxKsFCmLdsPC6Or3AP2fDk94Ew
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: teloexplico-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
