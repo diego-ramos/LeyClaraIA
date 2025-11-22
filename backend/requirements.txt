@@ -3,8 +3,6 @@ uvicorn
 python-multipart
 langchain
 langchain-community
-langchain-core
-langchain-text-splitters
 langchain-google-genai
 chromadb
 pypdf
