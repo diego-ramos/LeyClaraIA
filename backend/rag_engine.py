@@ -1,12 +1,11 @@
 import os
-from typing import List, Dict
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
-from langchain.docstore.document import Document
+from langchain_core.prompts import PromptTemplate
+from langchain_core.documents import Document
 
 class RAGEngine:
     def __init__(self):
