@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build: ./backend
-    container_name: teloexplico-backend
+    container_name: leyclara-backend
     ports:
       - "8000:8000"
     volumes:
@@ -18,7 +18,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: teloexplico-frontend
+    container_name: leyclara-frontend
     ports:
       - "3000:80"
     depends_on:

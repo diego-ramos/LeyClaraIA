@@ -7,7 +7,7 @@ import shutil
 from rag_engine import RAGEngine
 from youtube_service import search_youtube_videos
 
-app = FastAPI(title="TeLoExplico API")
+app = FastAPI(title="LeyClara.IA API")
 
 # CORS
 app.add_middleware(

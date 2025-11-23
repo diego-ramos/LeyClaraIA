@@ -44,6 +44,9 @@ class RAGEngine:
         
         if not self.google_api_key:
             print("WARNING: GOOGLE_API_KEY not found. RAG will not work correctly.")
+        else:
+            #masked_key = f"{self.google_api_key[:5]}...{self.google_api_key[-5:]}"
+            print(f"DEBUG: Using GOOGLE_API_KEY: {self.google_api_key}")
         
         # Use custom embeddings class to force REST transport and bypass LangChain wrapper issues
         self.embeddings = CustomGoogleEmbeddings(api_key=self.google_api_key, model="models/text-embedding-004")

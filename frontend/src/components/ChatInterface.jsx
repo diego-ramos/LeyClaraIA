@@ -3,11 +3,11 @@ import axios from 'axios';
 import { Send, Mic, Volume2, Paperclip, FileText, Youtube, AlertCircle, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'; // TODO: Change this to your backend URL if using!
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function ChatInterface() {
     const [messages, setMessages] = useState([
-        { role: 'assistant', content: 'Hola! Soy TeLoExplico. Sube tus documentos legales y pregúntame lo que quieras. Te lo explicaré fácil.' }
+        { role: 'assistant', content: 'Hola! Soy LeyClara.IA. Sube tus documentos legales y pregúntame lo que quieras. Te lo explicaré fácil.' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -128,7 +128,7 @@ export default function ChatInterface() {
             <header className="bg-white shadow-sm p-4 flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                     <FileText className="w-8 h-8" />
-                    TeLoExplico
+                    LeyClara.IA
                 </h1>
                 <div className="flex items-center gap-4">
                     {/* File Upload Area */}
