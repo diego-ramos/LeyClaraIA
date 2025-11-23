@@ -19,15 +19,13 @@ class CustomGoogleEmbeddings(Embeddings):
         self.model = model
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for text in texts:
-            result = genai.embed_content(
-                model=self.model,
-                content=text,
-                task_type="retrieval_document"
-            )
-            embeddings.append(result['embedding'])
-        return embeddings
+        # Use batch embedding - send all texts in one API call
+        result = genai.embed_content(
+            model=self.model,
+            content=texts,  # Send all texts at once
+            task_type="retrieval_document"
+        )
+        return result['embedding']
 
     def embed_query(self, text: str) -> List[float]:
         result = genai.embed_content(
@@ -127,23 +125,30 @@ class RAGEngine:
         print(f"Generated {len(texts)} chunks. Starting embedding in batches...")
         
         # Batch processing to avoid API timeouts
-        batch_size = 1
+        # Google API supports up to 100 texts per batch, using 50 for safety
+        batch_size = 50
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
             print(f"Processing batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size} ({len(batch)} chunks)...")
             
             # Retry embedding generation for each batch
             self.retry_with_backoff(self.vector_store.add_documents, batch)
-            time.sleep(1.5) # Rate limiting
+            time.sleep(0.5) # Reduced rate limiting since we're making fewer calls
             
         self.vector_store.persist()
         print(f"Ingested {len(texts)} chunks successfully.")
 
     def query(self, query_text: str) -> Dict:
+        # Query expansion for short queries - simple prefix addition
+        expanded_query = query_text
+        if len(query_text.split()) <= 4:  # If query is 4 words or less
+            expanded_query = f"Háblame sobre {query_text}"
+            print(f"Short query detected. Expanded: '{query_text}' -> '{expanded_query}'")
+        
         # Retrieve top k documents (Increased to 6 for better recall)
         retriever = self.vector_store.as_retriever(search_kwargs={"k": 6})
         
-        # Create Chain
+        # Create Chain - use expanded query for retrieval
         qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
@@ -152,8 +157,8 @@ class RAGEngine:
             chain_type_kwargs={"prompt": self.prompt}
         )
         
-        # Retry query execution
-        result = self.retry_with_backoff(qa_chain, {"query": query_text})
+        # Retry query execution with expanded query
+        result = self.retry_with_backoff(qa_chain, {"query": expanded_query})
         
         answer = result["result"]
         source_docs = result["source_documents"]
