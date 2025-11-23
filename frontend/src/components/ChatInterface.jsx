@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Send, Mic, Volume2, Paperclip, FileText, Youtube, AlertCircle, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'; // TODO: Change this to your backend URL if using!
 
 export default function ChatInterface() {
     const [messages, setMessages] = useState([

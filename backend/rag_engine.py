@@ -117,7 +117,8 @@ class RAGEngine:
             return
 
         print("Splitting documents...")
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        # Smaller chunks for better granularity
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
         texts = text_splitter.split_documents(documents)
         
         print(f"Generated {len(texts)} chunks. Starting embedding in batches...")
@@ -136,8 +137,8 @@ class RAGEngine:
         print(f"Ingested {len(texts)} chunks successfully.")
 
     def query(self, query_text: str) -> Dict:
-        # Retrieve top k documents
-        retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
+        # Retrieve top k documents (Increased to 6 for better recall)
+        retriever = self.vector_store.as_retriever(search_kwargs={"k": 6})
         
         # Create Chain
         qa_chain = RetrievalQA.from_chain_type(
