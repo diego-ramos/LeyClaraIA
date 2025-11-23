@@ -3,7 +3,7 @@ from datetime import datetime
 from tinydb import TinyDB, Query
 
 class DocumentStore:
-    def __init__(self, db_path="documents.json"):
+    def __init__(self, db_path="/data/documents.json"):
         self.db = TinyDB(db_path)
         self.documents = self.db.table('documents')
 

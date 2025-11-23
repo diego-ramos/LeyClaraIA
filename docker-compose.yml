@@ -9,6 +9,7 @@ services:
     volumes:
       - ./backend:/app
       - ./data/chroma:/chroma_db
+      - ./data:/data
     environment:
       - PYTHONUNBUFFERED=1
       - CHROMA_DB_DIR=/chroma_db
