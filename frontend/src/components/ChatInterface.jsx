@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import axios from 'axios';
 import { Send, Mic, Volume2, Paperclip, FileText, Youtube, AlertCircle, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -15,6 +16,8 @@ export default function ChatInterface() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
     const [isListening, setIsListening] = useState(false);
+    const [documents, setDocuments] = useState([]);
+    const [showLibrary, setShowLibrary] = useState(false);
 
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -26,6 +29,19 @@ export default function ChatInterface() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    const fetchDocuments = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/documents`);
+            setDocuments(response.data);
+        } catch (error) {
+            console.error("Error fetching documents:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
 
     // Voice Recognition (Speech to Text)
     const startListening = () => {
@@ -78,9 +94,14 @@ export default function ChatInterface() {
             });
             setUploadStatus('¡Documentos listos! Ya puedes preguntar.');
             setFiles([]);
+            fetchDocuments(); // Refresh library
         } catch (error) {
             console.error("Upload error:", error);
-            setUploadStatus('Error al subir documentos.');
+            if (error.response && error.response.status === 400) {
+                setUploadStatus(`Error: ${error.response.data.detail}`);
+            } else {
+                setUploadStatus('Error al subir documentos.');
+            }
         } finally {
             setIsUploading(false);
         }
@@ -125,12 +146,19 @@ export default function ChatInterface() {
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white shadow-sm p-4 flex items-center justify-between">
+            <header className="bg-white shadow-sm p-4 flex items-center justify-between relative z-10">
                 <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
                     <FileText className="w-8 h-8" />
                     LeyClara.IA
                 </h1>
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setShowLibrary(!showLibrary)}
+                        className="text-sm font-medium text-gray-600 hover:text-primary flex items-center gap-1"
+                    >
+                        📚 Biblioteca ({documents.length})
+                    </button>
+
                     {/* File Upload Area */}
                     <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg">
                         <input
@@ -161,6 +189,25 @@ export default function ChatInterface() {
                     </div>
                     {uploadStatus && <span className="text-xs text-green-600 font-medium">{uploadStatus}</span>}
                 </div>
+
+                {/* Library Popover */}
+                {showLibrary && (
+                    <div className="absolute top-16 right-4 w-80 bg-white shadow-xl rounded-xl border border-gray-100 p-4 max-h-96 overflow-y-auto">
+                        <h3 className="font-bold text-gray-800 mb-3">Documentos Cargados</h3>
+                        {documents.length === 0 ? (
+                            <p className="text-sm text-gray-500">No hay documentos aún.</p>
+                        ) : (
+                            <ul className="space-y-2">
+                                {documents.map((doc, idx) => (
+                                    <li key={idx} className="text-sm border-b pb-2 last:border-0">
+                                        <p className="font-medium text-gray-700 truncate" title={doc.filename}>{doc.filename}</p>
+                                        <p className="text-xs text-gray-400">{new Date(doc.upload_date).toLocaleString()}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                )}
             </header>
 
             {/* Chat Area */}

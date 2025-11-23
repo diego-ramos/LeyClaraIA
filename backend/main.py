@@ -18,8 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize RAG Engine
+from document_store import DocumentStore
+
+# Initialize RAG Engine and Document Store
 rag_engine = RAGEngine()
+document_store = DocumentStore()
 
 class ChatRequest(BaseModel):
     message: str
@@ -34,15 +37,35 @@ from starlette.concurrency import run_in_threadpool
 
 # ...
 
+@app.get("/documents")
+def get_documents():
+    return document_store.get_all()
+
+import hashlib
+
 @app.post("/upload")
 async def upload_documents(files: List[UploadFile] = File(...)):
     saved_files = []
+    file_hashes = {}
     upload_dir = "uploads"
     os.makedirs(upload_dir, exist_ok=True)
     
     for file in files:
-        file_path = os.path.join(upload_dir, file.filename)
+        # Check if document already exists by name
+        if document_store.exists(file.filename):
+            raise HTTPException(status_code=400, detail=f"El archivo '{file.filename}' ya existe en la biblioteca.")
+
         content = await file.read()
+        
+        # Calculate hash to check for duplicate content
+        file_hash = hashlib.md5(content).hexdigest()
+        existing_doc = document_store.get_by_hash(file_hash)
+        if existing_doc:
+            raise HTTPException(status_code=400, detail=f"El contenido de este archivo ya existe (Nombre original: {existing_doc['filename']}).")
+        
+        file_hashes[file.filename] = file_hash
+
+        file_path = os.path.join(upload_dir, file.filename)
         
         # Debug: Print first 20 bytes
         print(f"File: {file.filename}, Size: {len(content)} bytes, Header: {content[:20]}")
@@ -60,6 +83,12 @@ async def upload_documents(files: List[UploadFile] = File(...)):
     # Index documents in a separate thread to avoid blocking the event loop
     try:
         await run_in_threadpool(rag_engine.ingest_documents, saved_files)
+        
+        # Register in Document Store after successful ingestion
+        for file_path in saved_files:
+            filename = os.path.basename(file_path)
+            document_store.add_document(filename, file_hash=file_hashes.get(filename))
+            
         return {"message": f"Successfully processed {len(saved_files)} documents."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

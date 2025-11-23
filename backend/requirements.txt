@@ -1,10 +1,12 @@
 fastapi
+fastapi
 uvicorn
 python-multipart
 langchain<0.2
 langchain-community<0.2
 langchain-core<0.2
 langchain-google-genai
+tinydb
 chromadb
 pypdf
 google-api-python-client
