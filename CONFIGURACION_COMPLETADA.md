@@ -121,25 +121,6 @@ Usa [`RAILWAY_DEPLOY.md`](file:///c:/TeLoExplico/RAILWAY_DEPLOY.md) como guía p
 ## 🎯 Ejemplo de Configuración Final
 
 ### En Railway - Backend Service
-
-```env
-GOOGLE_API_KEY=AIzaSyABC123...
-YOUTUBE_API_KEY=AIzaSyXYZ789...
-CHROMA_DB_DIR=/app/chroma_db
-PYTHONUNBUFFERED=1
-ALLOWED_ORIGINS=http://localhost:3000,https://teloexplico-frontend-production.up.railway.app
-```
-
-### En Railway - Frontend Service
-
-```env
-VITE_API_URL=https://teloexplico-backend-production.up.railway.app
-```
-
----
-
-## 🔍 Verificación
-
 Después de desplegar, verifica que:
 
 1. **Backend responde**: Visita `https://tu-backend.railway.app/health`

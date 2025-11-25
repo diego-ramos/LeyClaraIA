@@ -9,7 +9,7 @@ Railway charges based on:
 - **Memory usage** (GB hours)
 - **Network egress** (data transfer out)
 
-**Typical usage for TeLoExplico:**
+**Typical usage for LeyClara.IA:**
 - Backend (512MB RAM): ~$3-4/month
 - Frontend (static): ~$1-2/month
 - **Total**: ~$4-6/month
@@ -171,4 +171,4 @@ If you legitimately need more than $5/month:
 
 ---
 
-**Current Status**: Your TeLoExplico app should comfortably fit within the $5/month free tier for low-medium traffic! 🎉
+**Current Status**: Your LeyClara.IA app should comfortably fit within the $5/month free tier for low-medium traffic! 🎉

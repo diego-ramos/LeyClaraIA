@@ -12,7 +12,7 @@
 ### 1️⃣ Create Railway Project
 1. Go to [railway.app](https://railway.app) → **"New Project"**
 2. Select **"Deploy from GitHub repo"**
-3. Choose your **TeLoExplico** repository
+3. Choose your **LeyClara.IA** repository
 
 ### 2️⃣ Deploy Backend
 1. Railway auto-detects the project
@@ -27,7 +27,7 @@
 4. **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 5. Click **Deploy**
 6. Go to **Settings** → **Networking** → **Generate Domain**
-7. **Copy your backend URL** (e.g., `https://teloexplico-backend.railway.app`)
+7. **Copy your backend URL** (e.g., `https://leyclara-ia-backend.railway.app`)
 
 ### 3️⃣ Add Persistent Storage
 1. Click on backend service → **Settings** → **Volumes**

@@ -44,7 +44,7 @@ VITE_API_URL=https://tu-backend-url.railway.app
 1. Despliega el **Backend** primero
 2. Ve a **Backend Service → Settings → Networking**
 3. Click en **"Generate Domain"**
-4. Copia la URL (ejemplo: `https://teloexplico-backend-production.up.railway.app`)
+4. Copia la URL (ejemplo: `https://leyclara-ia-backend-production.up.railway.app`)
 5. Usa esa URL en `VITE_API_URL` del frontend
 
 ---
@@ -54,12 +54,12 @@ VITE_API_URL=https://tu-backend-url.railway.app
 Después de desplegar el **Frontend**, actualiza las variables del backend:
 
 1. Ve a **Frontend Service → Settings → Networking**
-2. Copia la URL del frontend (ejemplo: `https://teloexplico-frontend-production.up.railway.app`)
+2. Copia la URL del frontend (ejemplo: `https://leyclara-ia-frontend-production.up.railway.app`)
 3. Ve a **Backend Service → Variables**
 4. Actualiza `ALLOWED_ORIGINS` para incluir ambas URLs:
 
 ```env
-ALLOWED_ORIGINS=http://localhost:3000,https://teloexplico-frontend-production.up.railway.app
+ALLOWED_ORIGINS=http://localhost:3000,https://leyclara-ia-frontend-production.up.railway.app
 ```
 
 > **Nota**: Separa múltiples URLs con comas (sin espacios)
@@ -76,12 +76,12 @@ GOOGLE_API_KEY=AIzaSyABC123def456GHI789jkl012MNO345pqr
 YOUTUBE_API_KEY=AIzaSyXYZ789abc012DEF345ghi678JKL901mno
 CHROMA_DB_DIR=/app/chroma_db
 PYTHONUNBUFFERED=1
-ALLOWED_ORIGINS=http://localhost:3000,https://teloexplico-frontend-production.up.railway.app
+ALLOWED_ORIGINS=http://localhost:3000,https://leyclara-ia-frontend-production.up.railway.app
 ```
 
 ### Frontend Variables (ejemplo)
 ```env
-VITE_API_URL=https://teloexplico-backend-production.up.railway.app
+VITE_API_URL=https://leyclara-ia-backend-production.up.railway.app
 ```
 
 ---

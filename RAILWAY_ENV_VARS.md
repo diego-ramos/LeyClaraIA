@@ -28,7 +28,7 @@ VITE_API_URL=https://your-backend-service.railway.app
 1. Deploy your backend service first
 2. Go to Backend Service → Settings → Networking
 3. Click "Generate Domain"
-4. Copy the generated URL (e.g., `https://teloexplico-backend-production.up.railway.app`)
+4. Copy the generated URL (e.g., `https://leyclara-ia-backend-production.up.railway.app`)
 5. Use this URL in the frontend's `VITE_API_URL` variable
 
 ---

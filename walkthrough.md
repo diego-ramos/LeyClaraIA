@@ -1,6 +1,6 @@
-# TeLoExplico - Walkthrough
+# LeyClara.IA - Walkthrough
 
-This guide explains how to run and verify the **TeLoExplico** legal chat assistant.
+This guide explains how to run and verify the **LeyClara.IA** legal chat assistant.
 
 ## Prerequisites
 - Docker & Docker Compose installed.
