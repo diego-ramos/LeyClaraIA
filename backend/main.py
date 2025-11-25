@@ -12,6 +12,7 @@ app = FastAPI(title="LeyClara.IA API")
 # CORS Configuration
 # Get allowed origins from environment variable or use defaults
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+print(f"DEBUG: CORS allowed_origins = {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
