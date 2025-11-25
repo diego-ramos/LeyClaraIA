@@ -35,7 +35,7 @@ Una decisión crítica de diseño fue el tamaño de los "chunks" (fragmentos de 
     *   Inicialmente probamos con 1000 caracteres, pero el sistema perdía detalles específicos (como números de artículos o títulos cortos) porque se "diluían" en tanto texto.
     *   Al reducirlo a **500 caracteres**, logramos un efecto "lupa": cada fragmento es más específico y preciso. Esto permite encontrar "agujas en un pajar" (detalles puntuales) con mucha mayor eficacia.
 
-## � El Rol de LangChain (El "Pegamento")
+## 🧩 El Rol de LangChain (El "Pegamento")
 
 **LangChain** es el framework que conecta todas las piezas del rompecabezas. Actúa como el orquestador que:
 
@@ -45,7 +45,7 @@ Una decisión crítica de diseño fue el tamaño de los "chunks" (fragmentos de 
 
 Sin LangChain, tendríamos que escribir manualmente todo el código para conectar estos servicios dispares.
 
-## �🛠️ Tecnologías
+## 🛠️ Tecnologías
 
 *   **Backend:** Python, FastAPI.
 *   **IA:** Google Gemini 1.5 Flash (vía LangChain).
@@ -55,10 +55,65 @@ Sin LangChain, tendríamos que escribir manualmente todo el código para conecta
 
 ## 🚀 Cómo Ejecutarlo
 
+### Desarrollo Local
+
 1.  Clona el repositorio.
-2.  Crea un archivo `.env` con tus claves de API (ver `.env.example`).
-3.  Ejecuta:
+2.  Crea un archivo `.env` en la raíz con tus claves de API (ver `.env.example`).
+3.  Crea un archivo `frontend/.env` con:
+    ```env
+    VITE_API_URL=http://localhost:8000
+    ```
+4.  Ejecuta:
     ```bash
     docker-compose up --build
     ```
-4.  Abre `http://localhost:3000` y empieza a subir documentos.
+5.  Abre `http://localhost:3000` y empieza a subir documentos.
+
+### 🌐 Despliegue en la Nube
+
+#### Opción 1: Google Compute Engine (Recomendado - Con Persistencia)
+
+Para despliegue en producción con almacenamiento persistente:
+
+```bash
+# Ver instrucciones completas
+cat .agent/workflows/deploy-to-gce.md
+```
+
+**Ventajas:**
+- ✅ Datos persistentes (ChromaDB, documentos subidos)
+- ✅ Costos predecibles (~$15-30/mes)
+- ✅ Control total del servidor
+
+#### Opción 2: Railway
+
+Railway ofrece $5/mes de crédito gratuito, suficiente para proyectos pequeños/medianos.
+
+**Guía Rápida:**
+1. Crea una cuenta en [railway.app](https://railway.app)
+2. Conecta tu repositorio de GitHub
+3. Sigue la guía: [`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md)
+4. Usa el checklist: [`RAILWAY_CHECKLIST.md`](RAILWAY_CHECKLIST.md)
+
+**Recursos:**
+- 📖 [Guía Completa de Despliegue](.agent/workflows/deploy_to_railway.md)
+- 🔧 [Variables de Entorno](RAILWAY_ENV_VARS.md)
+- ✅ [Checklist de Despliegue](RAILWAY_CHECKLIST.md)
+
+#### Opción 3: Google Cloud Run (Stateless)
+
+Para despliegue rápido sin persistencia:
+
+```bash
+# Ver instrucciones
+cat .agent/workflows/deploy_to_cloud_run.md
+```
+
+**Limitaciones:**
+- ⚠️ Los datos se pierden al reiniciar
+- ⚠️ No recomendado para producción
+
+#### Otras Opciones
+
+- **Render**: Alternativa gratuita similar a Railway
+- **Fly.io**: Excelente para aplicaciones Docker

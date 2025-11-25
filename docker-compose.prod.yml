@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: leyclara-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount persistent data directories
+      - /opt/leyclara-ia/data/chroma:/chroma_db
+      - /opt/leyclara-ia/data/uploads:/app/uploads
+      - /opt/leyclara-ia/data/documents:/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CHROMA_DB_DIR=/chroma_db
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    container_name: leyclara-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
