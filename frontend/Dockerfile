@@ -2,13 +2,14 @@
 FROM node:18-alpine as build
 WORKDIR /app
 
-# Accept build argument for API URL
-ARG VITE_API_URL=http://localhost:8000
-ENV VITE_API_URL=$VITE_API_URL
-
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
+
+# Copy source code
 COPY . .
+
+# Build with environment variable from Railway
 RUN npm run build
 
 # Production Stage
