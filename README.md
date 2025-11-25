@@ -1,5 +1,8 @@
 # LeyClara.IA 📜⚖️
 
+[![en](https://img.shields.io/badge/lang-en-red.svg)](README_en.md)
+
+
 **LeyClara.IA** es un asistente legal inteligente diseñado para democratizar el acceso a la información jurídica. Su objetivo es tomar documentos legales complejos (leyes, contratos, sentencias) y explicarlos en un lenguaje sencillo y accesible para cualquier persona, "como si tuviera 5 años".
 
 ## 🧠 Arquitectura Técnica: RAG (Retrieval-Augmented Generation)
